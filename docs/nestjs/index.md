@@ -11,8 +11,7 @@
 - [Pipes](#pipes)
 - [Middleware](#middleware)
 - [Exception Filters](#exception-filters)
-- [Database (TypeORM/Prisma)](#database)
-- [PostgreSQL Raw SQL (pg, sin ORMs)](#raw-sql)
+- [Database (SQL Server & PostgreSQL sin ORMs)](#database)
 - [Authentication](#authentication)
 - [Testing](#testing)
 - [Project Structure](#project-structure)
@@ -36,24 +35,16 @@ Every piece is a class with a decorator, managed by the DI container.
 
 ```typescript
 // app.module.ts
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './database/database.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('DB_HOST'),
-        port: config.get('DB_PORT'),
-        username: config.get('DB_USER'),
-        password: config.get('DB_PASS'),
-        database: config.get('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: config.get('NODE_ENV') !== 'production',
-        ssl: config.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
-      }),
-    }),
+    DatabaseModule, // Módulo global de conexión base de datos nativa
     UsersModule,
     AuthModule,
   ],
@@ -63,11 +54,12 @@ Every piece is a class with a decorator, managed by the DI container.
 export class AppModule {}
 
 // Feature module
+// src/modules/users/users.module.ts
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Profile])],
+  imports: [], // NO importamos TypeOrmModule ni repositorios ORM
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService],   // make available to other modules
+  exports: [UsersService],   // exportado para inyección en otros módulos
 })
 export class UsersModule {}
 
@@ -607,114 +599,125 @@ app.useGlobalFilters(new GlobalExceptionFilter(app.get(LoggerService)));
 
 ---
 
-## Database (TypeORM + Prisma)
+## Database (SQL Server & PostgreSQL sin ORMs)
 
-### TypeORM Repository Pattern
+> [!IMPORTANT]
+> **REGLA CRÍTICA:** Queda estrictamente prohibido el uso de ORMs (TypeORM, Prisma, Sequelize, Drizzle, etc.). Deben utilizarse únicamente controladores de base de datos nativos (`mssql` para SQL Server y `pg` para PostgreSQL) con consultas SQL parametrizadas.
+
+### 1. Integración de SQL Server (`mssql`) con NestJS
+
+Para conectar SQL Server de forma nativa sin ORMs, se crea un proveedor global utilizando el paquete `mssql`.
 
 ```typescript
+// src/database/database.module.ts
+import { Module, Global } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as sql from 'mssql';
+import { DatabaseService } from './database.service';
+
+export const MSSQL_POOL = 'MSSQL_POOL';
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: MSSQL_POOL,
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
+        const dbConfig: sql.config = {
+          user: config.get<string>('DB_USER'),
+          password: config.get<string>('DB_PASS'),
+          server: config.get<string>('DB_HOST'),
+          database: config.get<string>('DB_NAME'),
+          port: config.get<number>('DB_PORT', 1433),
+          options: {
+            encrypt: config.get<boolean>('DB_SSL', false),
+            trustServerCertificate: true,
+          },
+          pool: {
+            max: 20,
+            min: 2,
+            idleTimeoutMillis: 30000,
+          },
+        };
+        const pool = new sql.ConnectionPool(dbConfig);
+        await pool.connect();
+        return pool;
+      },
+    },
+    DatabaseService,
+  ],
+  exports: [MSSQL_POOL, DatabaseService],
+})
+export class DatabaseModule {}
+```
+
+```typescript
+// src/database/database.service.ts
+import { Injectable, Inject, OnModuleDestroy } from '@nestjs/common';
+import * as sql from 'mssql';
+import { MSSQL_POOL } from './database.module';
+
 @Injectable()
-export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-  ) {}
+export class DatabaseService implements OnModuleDestroy {
+  constructor(@Inject(MSSQL_POOL) private readonly pool: sql.ConnectionPool) {}
 
-  // Complex queries with QueryBuilder
-  async findByFilters(filters: UserFilters): Promise<User[]> {
-    const qb = this.userRepo.createQueryBuilder('user')
-      .leftJoinAndSelect('user.profile', 'profile')
-      .leftJoinAndSelect('user.roles', 'roles');
-
-    if (filters.email) qb.andWhere('user.email ILIKE :email', { email: `%${filters.email}%` });
-    if (filters.role) qb.andWhere('roles.name = :role', { role: filters.role });
-    if (filters.createdAfter) qb.andWhere('user.createdAt >= :after', { after: filters.createdAfter });
-    if (filters.isActive !== undefined) qb.andWhere('user.isActive = :active', { active: filters.isActive });
-
-    return qb.orderBy('user.createdAt', 'DESC').getMany();
+  async onModuleDestroy() {
+    await this.pool.close();
   }
 
-  // Raw SQL for complex aggregations
-  async getUserStats(): Promise<UserStats[]> {
-    return this.userRepo.query(`
-      SELECT
-        DATE_TRUNC('month', "createdAt") AS month,
-        COUNT(*) AS total,
-        COUNT(*) FILTER (WHERE role = 'admin') AS admins
-      FROM "user"
-      WHERE "createdAt" >= NOW() - INTERVAL '12 months'
-      GROUP BY month
-      ORDER BY month DESC
-    `);
+  // Ejecuta una consulta parametrizada
+  async query<T = any>(
+    queryText: string,
+    params: { name: string; type: sql.ISqlType; value: any }[] = []
+  ): Promise<T[]> {
+    const request = this.pool.request();
+    for (const p of params) {
+      request.input(p.name, p.type, p.value);
+    }
+    const result = await request.query(queryText);
+    return result.recordset as T[];
+  }
+
+  // Ejecuta una consulta y retorna el primer registro o null
+  async queryOne<T = any>(
+    queryText: string,
+    params: { name: string; type: sql.ISqlType; value: any }[] = []
+  ): Promise<T | null> {
+    const records = await this.query<T>(queryText, params);
+    return records.length > 0 ? records[0] : null;
+  }
+
+  // Ejecución de transacciones de múltiples pasos para asegurar atomicidad
+  async transaction<T>(
+    callback: (transaction: sql.Transaction) => Promise<T>
+  ): Promise<T> {
+    const tx = new sql.Transaction(this.pool);
+    await tx.begin();
+    try {
+      const result = await callback(tx);
+      await tx.commit();
+      return result;
+    } catch (error) {
+      await tx.rollback();
+      throw error;
+    }
   }
 }
 ```
 
-### Prisma Service
+### 2. Integración de PostgreSQL (`pg` sin ORMs)
+
+Si se utiliza PostgreSQL como base de datos alternativa o secundaria:
 
 ```typescript
-// prisma.service.ts
-@Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  constructor(private readonly config: ConfigService) {
-    super({
-      datasources: {
-        db: {
-          url: config.get('DATABASE_URL'),
-        },
-      },
-      log: config.get('NODE_ENV') === 'development' 
-        ? ['query', 'info', 'warn'] 
-        : ['error'],
-    });
-  }
-
-  async onModuleInit() { await this.$connect(); }
-  async onModuleDestroy() { await this.$disconnect(); }
-}
-
-// Usage in service
-@Injectable()
-export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async findOne(id: string) {
-    return this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        profile: true,
-        posts: {
-          where: { published: true },
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
-  }
-
-  async createWithProfile(dto: CreateUserDto) {
-    // Transaction with Prisma
-    return this.prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({ data: dto });
-      await tx.profile.create({ data: { userId: user.id } });
-      return user;
-    });
-  }
-}
-```
-
----
-
-## PostgreSQL Raw SQL (pg, sin ORMs)
-
-Si prefieres SQL puro y stored procedures en lugar de ORMs:
-
-```typescript
-// database.service.ts - usando pg (node-postgres) puro
+// src/database/pg-database.service.ts
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { Pool, QueryResult } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class DatabaseService implements OnModuleInit, OnModuleDestroy {
+export class PgDatabaseService implements OnModuleInit, OnModuleDestroy {
   private pool: Pool;
 
   constructor(private readonly config: ConfigService) {}
@@ -738,19 +741,18 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     await this.pool?.end();
   }
 
-  // Query simple con parametros (protege contra SQL injection)
+  // Query simple con parámetros de sustitución ($1, $2, etc.)
   async query<T = any>(sql: string, params?: any[]): Promise<T[]> {
     const result = await this.pool.query(sql, params);
     return result.rows as T[];
   }
 
-  // Query que retorna UNA fila
   async queryOne<T = any>(sql: string, params?: any[]): Promise<T | null> {
     const result = await this.pool.query(sql, params);
     return (result.rows[0] as T) ?? null;
   }
 
-  // Transaccion con callback
+  // Transacciones seguras con pg
   async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
     try {
@@ -765,19 +767,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       client.release();
     }
   }
-
-  // Ejecutar funcion/stored procedure de PostgreSQL
-  async callProc<T = any>(procName: string, params?: any[]): Promise<T[]> {
-    const placeholders = params?.map((_, i) => `$${i + 1}`).join(', ') ?? '';
-    const sql = `SELECT * FROM ${procName}(${placeholders})`;
-    return this.query<T>(sql, params);
-  }
 }
+```
 
-// users.service.ts - usando SQL PURO (sin ORM!)
+### 3. Inyección y Uso en Servicios de Negocio
+
+A continuación se muestra el uso de `PgDatabaseService` con consultas manuales y transacciones seguras:
+
+```typescript
+// src/modules/users/users.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PgDatabaseService } from '../../database/pg-database.service';
+
 @Injectable()
 export class UsersService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: PgDatabaseService) {}
 
   // Query con parametros tipados
   async findById(id: string): Promise<User | null> {
@@ -956,7 +960,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    @Inject('REFRESH_TOKEN_REPO') private readonly refreshRepo: Repository<RefreshToken>,
+    private readonly db: PgDatabaseService,
   ) {}
 
   async login(dto: LoginDto): Promise<AuthResponse> {
@@ -982,28 +986,33 @@ export class AuthService {
   }
 
   async refreshTokens(token: string): Promise<AuthResponse> {
-    const stored = await this.refreshRepo.findOne({
-      where: { token },
-      relations: ['user'],
-    });
+    // Consulta SQL con INNER JOIN para evitar selects adicionales
+    const stored = await this.db.queryOne<any>(
+      `SELECT rt.token, rt.expires_at, u.email, u.roles
+       FROM refresh_tokens rt
+       INNER JOIN users u ON rt.user_id = u.id
+       WHERE rt.token = $1`,
+      [token]
+    );
 
-    if (!stored || stored.expiresAt < new Date()) {
+    if (!stored || new Date(stored.expires_at) < new Date()) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    // Rotate refresh token
-    await this.refreshRepo.remove(stored);
-    return this.login({ email: stored.user.email, password: '' });
+    // Rotar token: Eliminar el usado
+    await this.db.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
+    return this.login({ email: stored.email, password: '' });
   }
 
   private async generateRefreshToken(userId: string): Promise<string> {
     const token = crypto.randomBytes(64).toString('hex');
-    const entity = this.refreshRepo.create({
-      token,
-      userId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    });
-    await this.refreshRepo.save(entity);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 días
+
+    await this.db.query(
+      `INSERT INTO refresh_tokens (token, user_id, expires_at)
+       VALUES ($1, $2, $3)`,
+      [token, userId, expiresAt]
+    );
     return token;
   }
 }
@@ -1018,19 +1027,17 @@ export class AuthService {
 ```typescript
 describe('UsersService', () => {
   let service: UsersService;
-  let repo: Repository<User>;
+  let db: PgDatabaseService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
         UsersService,
         {
-          provide: getRepositoryToken(User),
+          provide: PgDatabaseService,
           useValue: {
-            findOne: jest.fn(),
-            findAndCount: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
+            query: jest.fn(),
+            queryOne: jest.fn(),
           },
         },
         {
@@ -1041,24 +1048,24 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get(UsersService);
-    repo = module.get(getRepositoryToken(User));
+    db = module.get(PgDatabaseService);
   });
 
   it('returns user from cache when available', async () => {
     const cached = { id: '1', email: 'test@test.com' };
     jest.spyOn(module.get(CacheService), 'get').mockResolvedValue(JSON.stringify(cached));
 
-    const result = await service.findOne('1');
+    const result = await service.findOne(1);
 
     expect(result).toEqual(cached);
-    expect(repo.findOne).not.toHaveBeenCalled();
+    expect(db.queryOne).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when user missing', async () => {
     jest.spyOn(module.get(CacheService), 'get').mockResolvedValue(null);
-    jest.spyOn(repo, 'findOne').mockResolvedValue(null);
+    jest.spyOn(db, 'queryOne').mockResolvedValue(null);
 
-    await expect(service.findOne('999')).rejects.toThrow(NotFoundException);
+    await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
   });
 });
 ```
@@ -1068,7 +1075,7 @@ describe('UsersService', () => {
 ```typescript
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let db: PgDatabaseService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -1079,8 +1086,9 @@ describe('UsersController (e2e)', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
 
-    prisma = module.get(PrismaService);
-    await prisma.$executeRawUnsafe('TRUNCATE TABLE "user" CASCADE');
+    db = module.get(PgDatabaseService);
+    // Truncar tabla usando SQL puro
+    await db.query('TRUNCATE TABLE users CASCADE');
   });
 
   afterAll(async () => {
@@ -1095,7 +1103,7 @@ describe('UsersController (e2e)', () => {
 
     expect(res.body.success).toBe(true);
     expect(res.body.data.email).toBe('new@test.com');
-    expect(res.body.data).not.toHaveProperty('password');  // DTO excludes it
+    expect(res.body.data).not.toHaveProperty('password');
   });
 
   it('POST /users rejects duplicate email', async () => {
