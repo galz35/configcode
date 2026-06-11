@@ -1,0 +1,19 @@
+---
+description: "Optimización de consultas SQL Server y PostgreSQL"
+globs: ["**/*.sql", "src/**/*.sql", "queries/**/*.sql"]
+alwaysApply: false
+---
+
+# Estándares de Base de Datos y SQL
+
+Reglas activas para escribir y optimizar consultas en SQL Server y PostgreSQL.
+
+## 1. Reglas de Consulta
+- **Queries Parametrizadas:** Queda terminantemente prohibido concatenar entradas del usuario. Usa parámetros tipados.
+- **Evitar Escaneos Innecesarios:** Evita aplicar funciones a columnas en el `WHERE` (ej: no usar `YEAR(Fecha)`), prefiere rangos directos para aprovechar los índices de la base de datos.
+- **Índices de Cobertura:** En consultas frecuentes, usa índices no clúster con cláusulas `INCLUDE` para evitar búsquedas en la tabla física principal.
+
+## 2. Convenciones
+- El nombre de los stored procedures creados por el desarrollador debe iniciar con `usp_` (User Stored Procedure).
+- Para cálculos acumulados, prefiere funciones de ventana (`ROW_NUMBER()`, `LAG()`) sobre auto-joins costosos.
+- Ejecuta las sentencias DML multi-tabla dentro de bloques transaccionales explícitos (`BEGIN TRANSACTION` y `COMMIT/ROLLBACK`).

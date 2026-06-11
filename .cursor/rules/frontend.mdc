@@ -1,0 +1,24 @@
+---
+description: "Pautas de diseño frontend en React con TypeScript y estilización premium CSS"
+globs: ["src/frontend/**/*.tsx", "src/**/*.tsx", "src/**/*.jsx", "src/**/*.css"]
+alwaysApply: false
+---
+
+# Estándares de Frontend
+
+Reglas activas para desarrollo web frontend con React, TypeScript y estilos.
+
+## 1. Composición y Estilo
+- Usa componentes funcionales con TypeScript estricto.
+- Prefiere **named exports** en lugar de default exports para consistencia en imports.
+- Estiliza usando variables CSS de diseño (Design Tokens) HSL definidas en `index.css`.
+- Soporta de forma nativa temas claro y oscuro (`prefers-color-scheme`).
+
+## 2. Tipografía y Micro-animaciones
+- Mantén espaciados consistentes basados en la grilla de múltiplos de 4px/8px.
+- Agrega transiciones suaves (`transition: all 0.2s ease`) al estado `:hover` y `:active` de los botones.
+- Implementa skeletons de carga en lugar de spinners planos para mejorar la experiencia de usuario.
+
+## 3. Accesibilidad (WCAG 2.2)
+- Todo elemento interactivo debe tener un target mínimo de **44x44px** y un foco visible (`:focus-visible`).
+- Provee etiquetas `aria-label` en botones con íconos y mantén una estructura semántica de HTML5.

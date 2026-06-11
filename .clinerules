@@ -1,0 +1,25 @@
+# Cline System Rules (GOLDEN_RULES)
+
+Estas son las reglas inquebrantables del proyecto. Se ejecutan automáticamente al inicio de tu sesión en este workspace.
+
+## 1. Mantenimiento del Contexto (Memory Bank)
+- Al iniciar cualquier tarea, lee primero los archivos en `memory-bank/` (comenzando por `README.md` y `activeContext.md`).
+- Mantén actualizado `memory-bank/progress.md` y `memory-bank/activeContext.md` al finalizar tareas significativas.
+
+## 2. Prohibición de ORMs (Regla Crítica)
+- **NUNCA** uses TypeORM, Prisma, Sequelize, Drizzle, Knex, Entity Framework, Hibernate ni ningún otro ORM o Query Builder.
+- Usa **exclusivamente** consultas SQL parametrizadas puros con drivers nativos (`mssql` para SQL Server, `pg` para PostgreSQL).
+- Usa `RETURNING *` en sentencias de inserción/actualización.
+
+## 3. Seguridad
+- **Queries Parametrizadas:** Queda prohibida la concatenación de entradas de usuario en strings SQL. Usa variables de sustitución (`$1`, `@param`).
+- **Secrets:** Nunca guardes credenciales, API keys o passwords en el código. Utiliza variables de entorno (`.env`).
+- **Headers:** Usa Helmet en servidores Node y configura cabeceras CSP/HSTS.
+
+## 4. Implementación Completa (Anti-Lazy)
+- **NUNCA** utilices comentarios del tipo `// ... rest of code` o placeholders. Escribe la implementación funcional completa en todos los archivos modificados.
+
+## 5. Estilo y Clean Code
+- Sigue principios SOLID y mantén baja complejidad ciclomática mediante retornos tempranos (early returns).
+- Nombrar archivos en kebab-case para web y snake_case para Flutter.
+- Usa `named exports` en TypeScript/React.

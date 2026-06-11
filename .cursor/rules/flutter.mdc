@@ -1,0 +1,20 @@
+---
+description: "Estándares de desarrollo móvil con Flutter y Dart"
+globs: ["lib/**/*.dart", "pubspec.yaml"]
+alwaysApply: false
+---
+
+# Estándares de Flutter
+
+Reglas activas para desarrollo de aplicaciones móviles con Flutter y Dart.
+
+## 1. Pautas del Código y Performance
+- Usa constructores `const` siempre que el widget sea estático para ahorrar ciclos de renderizado.
+- Inserta la validación `if (!mounted) return;` inmediatamente después de cualquier `await` asíncrono dentro de un `StatefulWidget`.
+- Limita el método `build()` a 50 líneas. Si excede esta longitud, extrae partes en subwidgets independientes.
+- Utiliza **Riverpod** para la gestión de estado y desacopla la lógica mediante repositorios limpios.
+
+## 2. Nomenclatura y Almacenamiento
+- Todos los nombres de archivos deben seguir la convención `snake_case`.
+- Para el almacenamiento de datos locales con enfoque Offline-First, usa **Hive** o **Drift (SQLite)**.
+- Formatea siempre el código ejecutando `dart format` antes de proponer cambios.

@@ -1,0 +1,25 @@
+---
+description: "Reglas de oro de obligado cumplimiento en todo el proyecto"
+globs: ["*"]
+alwaysApply: true
+---
+
+# Reglas de Oro Globales
+
+Estas reglas son obligatorias y de aplicación inmediata en cualquier archivo o interacción del proyecto.
+
+## 1. Implementación Completa (Anti-Lazy)
+- **NUNCA** trunques código ni uses comentarios como `// ... rest of code` o `// ... resto del código`.
+- Escribe siempre la implementación completa y funcional de todos los bloques modificados.
+
+## 2. Prohibido ORMs
+- **NUNCA** utilices TypeORM, Prisma, Sequelize, Drizzle, Knex, Entity Framework ni ningún otro ORM o Query Builder.
+- Usa consultas SQL puras y parametrizadas con el driver nativo correspondiente (`mssql` para SQL Server, `pg` para PostgreSQL).
+
+## 3. Seguridad Estricta
+- **Inyección SQL:** Queda prohibida la concatenación de variables en strings de SQL. Usa siempre parámetros (`@param`, `$1`).
+- **Secrets:** Nunca guardes credenciales, API keys o passwords en el código. Utiliza variables de entorno (`.env`).
+
+## 4. Estructura y Planificación
+- Para cualquier cambio que requiera lógica compleja o múltiples archivos, describe un plan de acción paso a paso **antes** de modificar el código.
+- Aplica principios SOLID y mantén una baja complejidad ciclomática usando retornos tempranos (early returns).

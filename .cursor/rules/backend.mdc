@@ -1,0 +1,24 @@
+---
+description: "Estándares y mejores prácticas para el desarrollo de Backend en Node.js (NestJS/Express)"
+globs: ["src/backend/**/*.ts", "**/nestjs/**/*.ts", "**/express/**/*.ts", "src/**/*.ts"]
+alwaysApply: false
+---
+
+# Estándares de Backend
+
+Este archivo de reglas se activa automáticamente al trabajar sobre código del backend en Node.js (NestJS o Express).
+
+## 1. Patrones de Diseño
+- Aplica los principios **SOLID** en controladores, servicios y proveedores.
+- Separa la lógica de negocio de la capa de transporte (controlador/rutas) y de la capa de persistencia (acceso a BD).
+- Valida los datos entrantes mediante DTOs tipados (Zod o class-validator).
+
+## 2. Acceso a Datos
+- Usa exclusivamente consultas parametrizadas directas.
+- El uso de cualquier ORM o Query Builder causará el rechazo inmediato del código.
+- Usa la cláusula `RETURNING` en sentencias de modificación para ahorrar consultas adicionales.
+
+## 3. Manejo de Errores y Logging
+- Nunca dejes bloques `catch` vacíos. Registra el error en un logger estructurado (Pino/Winston) y retorna un estado HTTP claro.
+- Prohibido el uso de `console.log` en producción. Usa logs JSON estructurados.
+- Documenta todas las funciones públicas con JSDoc indicando parámetros y tipos de retorno.
