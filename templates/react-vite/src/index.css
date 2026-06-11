@@ -1,0 +1,75 @@
+/* Modern Premium CSS Reset & Variables */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* HSL Color System */
+  --primary: 250 84% 54%;
+  --primary-foreground: 0 0% 100%;
+  
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  
+  --border: 214 32% 91%;
+  
+  /* Font Family */
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  
+  /* Radii */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  
+  /* Box Shadow */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: 250 95% 70%;
+    --primary-foreground: 222 47% 11%;
+    
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 16%;
+    --card-foreground: 210 40% 98%;
+    
+    --border: 217 32% 25%;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* Button & interactive states */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}

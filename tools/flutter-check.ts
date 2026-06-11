@@ -9,6 +9,14 @@ export default tool({
   async execute(args) {
     try {
       const target = args.path || "lib/"
+      
+      // Run dart format check first
+      try {
+        execSync(`dart format --set-exit-if-changed ${target}`, { cwd: process.cwd(), timeout: 30000 })
+      } catch (formatErr: any) {
+        return `FLUTTER CHECK FAILED (Formatting): Some files are not formatted correctly. Run 'dart format ${target}' to fix them.`
+      }
+
       const result = execSync(`flutter analyze ${target}`, {
         cwd: process.cwd(),
         timeout: 120000,
