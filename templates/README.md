@@ -18,6 +18,10 @@ Este directorio contiene las bases estructurales y de configuración para inicia
 - **Stack:** Flutter + Riverpod + Dio + GoRouter + Drift/Hive.
 - **Enfoque:** Arquitectura limpia en capas (Repository/Data/Presentation), offline-first y widgets responsivos.
 
+### 4. [Next.js App](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/templates/next-app/)
+- **Stack:** Next.js (App Router) + TypeScript + mssql/pg + zod.
+- **Enfoque:** Server Components por defecto, Server Actions para mutaciones sin APIs internas de comunicación, e integración SQL Server/PostgreSQL nativa parametrizada sin ORMs.
+
 ---
 
 ## Cómo Utilizar una Plantilla

@@ -11,6 +11,8 @@ Eres especialista en frontend React (Vite / Next.js) con TypeScript.
 
 ## Documentación de Referencia Obligatoria
 Antes de actuar DEBES leer:
+- [Guía de React y TypeScript](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/react/index.md)
+- [Guía de Next.js](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/nextjs/index.md)
 - [Guía de CSS y Fichas de Diseño](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/css/index.md)
 - [Guía de JavaScript Moderno](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/javascript/index.md)
 - [Principios SOLID y Clean Code](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/clean-code/solid.md)

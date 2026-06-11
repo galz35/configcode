@@ -4,7 +4,7 @@
 
 ### Añadido
 - **Memory Bank**: Sistema de contexto persistente (`memory-bank/`)
-- **Docs nuevos**: CSS, JavaScript, UX Design, DevOps, Docker, Git, SQL Server avanzado, Security avanzado
+- **Docs nuevos**: Next.js (App Router, Server Actions, SEO), CSS, JavaScript, UX Design, DevOps, Docker, Git, SQL Server avanzado, Security avanzado
 - **Agentes nuevos**: `@devops-engineer`, `@architect`
 - **Comandos nuevos**: `/scaffold`, `/docker`, `/deploy`, `/memory-update`
 - **Tools nuevos**: `security-check.ts`, `project-info.ts`
@@ -17,6 +17,7 @@
 - INIT.md universal (ya no atado a modelos específicos)
 - Todos los agentes existentes mejorados con más contexto y referencias
 - GOLDEN_RULES.md expandido con 5 nuevas secciones
+- `docs/nestjs/index.md` reescrito para eliminar referencias a ORMs y enfocarlo 100% a SQL Server (mssql) y PostgreSQL (pg) nativo con pools y transacciones puras.
 
 ### Movido a `optional/`
 - Rust (agent, docs, tool) → `optional/rust/`

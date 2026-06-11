@@ -26,6 +26,7 @@ Antes de escribir código en X tecnología, lee `.opencode/docs/X/`:
 | Tecnología | Docs |
 |------------|------|
 | React | `.opencode/docs/react/` |
+| Next.js | `.opencode/docs/nextjs/` |
 | CSS | `.opencode/docs/css/` |
 | JavaScript | `.opencode/docs/javascript/` |
 | UX/Diseño | `.opencode/docs/ux-design/` |
@@ -60,8 +61,8 @@ Lee `.opencode/docs/complex-tasks.md` y sigue el protocolo:
 3. Validar cada paso antes de avanzar
 
 Usa los subagentes de `.opencode/agents/` invocándolos con `@agent` + nombre:
-- `@frontend-dev` → React/TypeScript
-- `@backend-dev` → NestJS/Express + SQL puro
+- `@frontend-dev` → React/Next.js/TypeScript
+- `@backend-dev` → NestJS/Express/Next.js + SQL puro
 - `@sql-expert` → PostgreSQL + SQL Server
 - `@flutter-dev` → Flutter/Dart
 - `@tester` → Testing

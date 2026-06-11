@@ -34,8 +34,8 @@
 
 | Agente | Especialidad |
 |--------|-------------|
-| `@backend-dev` | Express/NestJS + SQL puro (pg/mssql) |
-| `@frontend-dev` | React + TypeScript + Vite |
+| `@backend-dev` | Express/NestJS/Next.js + SQL puro (pg/mssql) |
+| `@frontend-dev` | React/Next.js + TypeScript + Vite |
 | `@flutter-dev` | Flutter/Dart + Riverpod |
 | `@sql-expert` | PostgreSQL + SQL Server |
 | `@designer` | UI/UX review + accesibilidad |
@@ -67,6 +67,7 @@
 | Tecnología | Docs |
 |------------|------|
 | React | `docs/react/` — Patrones, paquetes, performance |
+| Next.js | `docs/nextjs/` — App Router, Server Actions, Rendering, SEO |
 | CSS | `docs/css/` — Metodologías, responsive, animaciones, dark mode |
 | JavaScript | `docs/javascript/` — ES2024+, async, módulos, performance |
 | UX Design | `docs/ux-design/` — Proceso, principios, accesibilidad, sistemas de diseño |
