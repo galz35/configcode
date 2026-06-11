@@ -51,6 +51,7 @@ Estas reglas definen los estándares obligatorios de desarrollo para cualquier A
 Antes de programar en un entorno específico, lee su guía correspondiente en `docs/`:
 - **CSS / Estilos:** [css/index.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/css/index.md)
 - **JavaScript / Node:** [javascript/index.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/javascript/index.md)
+- **Next.js (App Router):** [nextjs/index.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/nextjs/index.md)
 - **UX / UI / Proceso:** [ux-design/index.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/ux-design/index.md) y [process.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/ux-design/process.md)
 - **DevOps / Despliegue:** [devops/index.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/devops/index.md) y [docker.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/devops/docker.md)
 - **Git / Commits:** [git/index.md](file:///d:/PROYECTOS_PORTAL/SolicitudEmpleo/configcode/docs/git/index.md)

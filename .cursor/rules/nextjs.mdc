@@ -1,0 +1,25 @@
+---
+description: "Estándares de desarrollo para Next.js con App Router y Server Components"
+globs: ["app/**/*.tsx", "app/**/*.ts", "next.config.js", "next.config.mjs"]
+alwaysApply: false
+---
+
+# Reglas de Next.js (App Router)
+
+Este archivo de reglas se activa automáticamente al editar o crear páginas, layouts y componentes de Next.js.
+
+## 1. Arquitectura de Renderizado
+- **Por Defecto Servidor:** Todos los componentes son React Server Components (RSC) por defecto. No agregues `"use client"` a menos que sea estrictamente necesario (interactividad, hooks, DOM APIs).
+- **Hojas de Cliente:** Mantén los componentes de cliente en las hojas del árbol. Importa componentes de cliente dentro de componentes de servidor.
+- **Sin APIs obsoletas:** NUNCA intentes utilizar `getServerSideProps` o `getStaticProps`. Usa `async/await` directamente en las funciones de los componentes de servidor.
+
+## 2. Enrutamiento y Estados UI
+- Coloca siempre archivos de control de estados junto a `page.tsx`:
+  - `loading.tsx` para esqueletos de carga.
+  - `error.tsx` (que debe ser un componente cliente `"use client"`) para capturar fallos.
+- Usa rutas dinámicas estructuradas en carpetas con corchetes `[id]`.
+
+## 3. Obtención de Datos y Server Actions
+- Realiza consultas a la base de datos o APIs directamente dentro de las funciones asíncronas de los Server Components.
+- Utiliza **Server Actions** (`"use server"`) para manejar el envío de formularios y mutaciones de datos.
+- Llama a `revalidatePath()` o `revalidateTag()` después de realizar una mutación de datos para refrescar la caché del cliente de forma reactiva.

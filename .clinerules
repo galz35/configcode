@@ -16,10 +16,15 @@ Estas son las reglas inquebrantables del proyecto. Se ejecutan automáticamente 
 - **Secrets:** Nunca guardes credenciales, API keys o passwords en el código. Utiliza variables de entorno (`.env`).
 - **Headers:** Usa Helmet en servidores Node y configura cabeceras CSP/HSTS.
 
-## 4. Implementación Completa (Anti-Lazy)
+## 4. Estándares de Next.js (App Router)
+- **RSC por defecto:** Todos los componentes dentro de `app/` son Server Components por defecto. Usa `"use client"` únicamente en las hojas del árbol donde haya interactividad (inputs, onClick, hooks).
+- **Mutaciones:** Usa Server Actions (`"use server"`) y refresca el estado con `revalidatePath()` o `revalidateTag()`.
+- **Sin APIs legacy:** Prohibido el uso de `getServerSideProps` o `getStaticProps`.
+
+## 5. Implementación Completa (Anti-Lazy)
 - **NUNCA** utilices comentarios del tipo `// ... rest of code` o placeholders. Escribe la implementación funcional completa en todos los archivos modificados.
 
-## 5. Estilo y Clean Code
+## 6. Estilo y Clean Code
 - Sigue principios SOLID y mantén baja complejidad ciclomática mediante retornos tempranos (early returns).
 - Nombrar archivos en kebab-case para web y snake_case para Flutter.
 - Usa `named exports` en TypeScript/React.
